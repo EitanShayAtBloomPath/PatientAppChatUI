@@ -811,7 +811,7 @@ button:focus-visible,
 
 .steps-container {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
   gap: 0;
   min-width: min-content;
@@ -873,8 +873,8 @@ button:focus-visible,
 .step-connector {
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 0 0.5rem;
-  margin-top: 5rem;
   flex-shrink: 0;
 }
 
@@ -1275,7 +1275,7 @@ button:focus-visible,
 
 .program-phases {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: center;
   gap: 0;
   margin-bottom: 2.5rem;
