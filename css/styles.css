@@ -502,24 +502,9 @@ button:focus-visible,
   overflow: hidden;
 }
 
-/* Sun-Washed Yellow organic blob behind the visual */
-.hero::before {
-  content: '';
-  position: absolute;
-  top: 10%;
-  right: -5%;
-  width: 55%;
-  height: 80%;
-  background-color: var(--sun-washed-yellow);
-  opacity: 0.35;
-  border-radius: 60% 40% 50% 70% / 50% 60% 40% 50%;
-  z-index: 0;
-  pointer-events: none;
-}
-
 .hero .container {
   display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-columns: 1fr 1.2fr;
   gap: 4rem;
   align-items: center;
   position: relative;
@@ -565,11 +550,28 @@ button:focus-visible,
   margin-bottom: 0;
 }
 
-/* Hero visual — Care Architecture Card */
+/* Hero visual — card centered in the blob */
 .hero-visual {
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+}
+
+/* Sun-Washed Yellow blob — lives on hero-visual so it always tracks the card */
+.hero-visual::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 560px;
+  height: 520px;
+  background-color: var(--sun-washed-yellow);
+  opacity: 0.4;
+  border-radius: 60% 40% 50% 70% / 50% 60% 40% 50%;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .care-architecture-card {
@@ -578,8 +580,10 @@ button:focus-visible,
   padding: 2.25rem 2rem;
   box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 380px;
+  max-width: 360px;
   border: 1px solid rgba(43, 45, 66, 0.06);
+  position: relative;
+  z-index: 1;
 }
 
 .care-arch-eyebrow {
@@ -1655,7 +1659,11 @@ button:focus-visible,
     order: -1;
   }
 
-  .hero::before {
+  .care-architecture-card {
+    max-width: 100%;
+  }
+
+  .hero-visual::before {
     display: none;
   }
 
@@ -1800,10 +1808,6 @@ button:focus-visible,
     width: 100%;
     max-width: 360px;
     margin: 0 auto;
-  }
-
-  .care-architecture-card {
-    max-width: 100%;
   }
 
   .credibility-items {
