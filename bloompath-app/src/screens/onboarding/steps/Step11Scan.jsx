@@ -6,7 +6,7 @@ const BMI_SERVER = 'http://127.0.0.1:8080/predict';
 
 export default function Step11Scan({ data, onNext, onBack }) {
   const [phase, setPhase] = useState('idle'); // idle | scanning | done
-  const [bmiResult, setBmiResult] = useState(null); // { bmi, source } | null
+  const [bmiResult, setBmiResult] = useState(null); // { bmi, weightKg, weightLbs, source } | null
   const videoRef  = useRef(null);
   const canvasRef = useRef(null);
   const child = data.childName || 'your child';
