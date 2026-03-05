@@ -179,6 +179,7 @@ const FLOWS = {
         { label: "Log a family meal", action: "parent_meal" },
         { label: "Message care team", action: "parent_careteam" },
         { label: "Session prep", action: "parent_session_prep" },
+        { label: "Schedule a session", action: "parent_schedule" },
         { label: "Update measurements", action: "parent_metrics" },
       ],
       delay: 2000,
@@ -393,6 +394,125 @@ const FLOWS = {
       replies: [
         { label: "Take pantry photo", action: "parent_meal_photo" },
         { label: "Remind me later", action: "parent_home" },
+        { label: "Back to home", action: "parent_home" },
+      ],
+      delay: 1400,
+    },
+  ],
+
+  parent_schedule: [
+    { id: "psc1", from: "user", text: "Schedule a session" },
+    {
+      id: "psc2",
+      from: "bloom",
+      text: "Let's get your next session on the calendar! Here's what's coming up in the program:",
+      delay: 400,
+    },
+    {
+      id: "psc3",
+      from: "bloom",
+      type: "card",
+      card: {
+        type: "session",
+        title: "Next to Schedule",
+        subtitle: "Session 9 — Physical Activity II",
+        detail: "60 min · Progressing activity & sustainability",
+        provider: "with Coach James",
+      },
+      delay: 800,
+    },
+    {
+      id: "psc4",
+      from: "bloom",
+      text: "You can book this session and see all available times in the Sessions tab. Would you like to go there now, or is there something specific you'd like to schedule?",
+      delay: 1200,
+    },
+    {
+      id: "psc5",
+      from: "bloom",
+      type: "quickReplies",
+      replies: [
+        { label: "Open Sessions tab", action: "goto_sessions" },
+        { label: "Schedule a group session", action: "parent_schedule_group" },
+        { label: "Back to home", action: "parent_home" },
+      ],
+      delay: 1600,
+    },
+  ],
+
+  parent_schedule_group: [
+    { id: "psg1", from: "user", text: "Schedule a group session" },
+    {
+      id: "psg2",
+      from: "bloom",
+      text: "Group sessions are a great way for families to learn from each other. Here are the upcoming group options:",
+      delay: 400,
+    },
+    {
+      id: "psg3",
+      from: "bloom",
+      type: "card",
+      card: {
+        type: "session",
+        title: "Next Group Session",
+        subtitle: "Family Cooking Demo",
+        detail: "Sat, Mar 15 at 11:00 AM · 60 min",
+        provider: "with Maya Chen, RD · 4 families enrolled",
+      },
+      delay: 800,
+    },
+    {
+      id: "psg4",
+      from: "bloom",
+      type: "card",
+      card: {
+        type: "session",
+        title: "Coming Up",
+        subtitle: "Parent Support Circle",
+        detail: "Not yet scheduled · 60 min",
+        provider: "with Coach James · Open enrollment",
+      },
+      delay: 1200,
+    },
+    {
+      id: "psg5",
+      from: "bloom",
+      text: "Group sessions typically run on Saturday mornings and have 4–6 families per group. Want to sign up for the Cooking Demo, or see all options in the Sessions tab?",
+      delay: 1600,
+    },
+    {
+      id: "psg6",
+      from: "bloom",
+      type: "quickReplies",
+      replies: [
+        { label: "Sign up for Cooking Demo", action: "parent_schedule_confirmed" },
+        { label: "Open Sessions tab", action: "goto_sessions" },
+        { label: "Back to home", action: "parent_home" },
+      ],
+      delay: 2000,
+    },
+  ],
+
+  parent_schedule_confirmed: [
+    { id: "pscf1", from: "user", text: "Sign up for Cooking Demo" },
+    {
+      id: "pscf2",
+      from: "bloom",
+      text: "You're all set! The family is registered for the Cooking Demo on Saturday, Mar 15 at 11:00 AM.",
+      delay: 400,
+    },
+    {
+      id: "pscf3",
+      from: "bloom",
+      text: "Maya will send a prep list a few days before — just a few pantry staples. It's a really fun one. The kids love it!",
+      delay: 1000,
+    },
+    {
+      id: "pscf4",
+      from: "bloom",
+      type: "quickReplies",
+      replies: [
+        { label: "View all sessions", action: "goto_sessions" },
         { label: "Back to home", action: "parent_home" },
       ],
       delay: 1400,
@@ -1570,46 +1690,414 @@ function ParentProgressTab() {
   );
 }
 
+// ─── Session Schedule Data (all 20 IHBLT sessions + group) ────────
+const SESSION_DATA = [
+  // Phase 1: Intensive (Weeks 1–12)
+  { num: 1, title: "Welcome & Intake", topic: "Program introduction, baseline assessment, goal setting", phase: 1, duration: 75, providers: ["Dr. Nordgren (MD)", "Maya Chen (RD)"], type: "provider", date: "Feb 4", time: "10:00 AM", status: "done", cpt: ["99213–99214", "97802"] },
+  { num: 2, title: "Nutrition Foundations", topic: "Traffic light diet & MyPlate", phase: 1, duration: 60, providers: ["Maya Chen (RD)"], type: "provider", date: "Feb 11", time: "4:00 PM", status: "done", cpt: ["97802/97803"] },
+  { num: 3, title: "Building Healthy Routines", topic: "Family routines — meals, sleep, screen time", phase: 1, duration: 60, providers: ["Coach James"], type: "provider", date: "Feb 18", time: "4:00 PM", status: "done", cpt: ["99401–99402"] },
+  { num: 4, title: "Physical Activity I", topic: "Daily activity foundations, ≥60 min/day goal", phase: 1, duration: 60, providers: ["Maya Chen (RD)", "Coach James"], type: "provider", date: "Feb 25", time: "4:00 PM", status: "done", cpt: ["97803", "99401–99402"] },
+  { num: 5, title: "Parents as Agents of Change", topic: "Parent modeling & positive reinforcement", phase: 1, duration: 60, providers: ["Coach James"], type: "provider", date: "Mar 4", time: "2:00 PM", status: "done", cpt: ["99401"] },
+  { num: "G1", title: "Family Healthy Habits Circle", topic: "Group sharing: wins, barriers, and weekly goals", phase: 1, duration: 60, providers: ["Coach James", "Maya Chen (RD)"], type: "group", date: "Mar 1", time: "11:00 AM", status: "done", cpt: ["99412"] },
+  { num: 6, title: "Healthy Snacking & Beverages", topic: "Snack & drink swaps", phase: 1, duration: 60, providers: ["Maya Chen (RD)"], type: "provider", date: "Mar 5", time: "4:00 PM", status: "upcoming", cpt: ["97803"] },
+  { num: 7, title: "Sleep, Stress & Emotional Eating", topic: "Sleep hygiene & stress coping skills", phase: 1, duration: 60, providers: ["Coach James"], type: "provider", date: "Mar 11", time: "4:00 PM", status: "scheduled", cpt: ["99401–99402"] },
+  { num: "G2", title: "Family Cooking Demo", topic: "Group session: building balanced meals together", phase: 1, duration: 60, providers: ["Maya Chen (RD)"], type: "group", date: "Mar 15", time: "11:00 AM", status: "scheduled", cpt: ["99412"] },
+  { num: 8, title: "Eating Out & Social Situations", topic: "Skills for dining out & school lunches", phase: 1, duration: 60, providers: ["Maya Chen (RD)"], type: "provider", date: "Mar 18", time: "4:00 PM", status: "scheduled", cpt: ["97803"] },
+  { num: 9, title: "Physical Activity II", topic: "Progressing activity & sustainability", phase: 1, duration: 60, providers: ["Coach James"], type: "provider", date: "Mar 25", time: "4:00 PM", status: "open", cpt: ["99401–99402"] },
+  { num: 10, title: "Family Meal Planning", topic: "Meal planning & cooking skills", phase: 1, duration: 60, providers: ["Maya Chen (RD)"], type: "provider", date: null, time: null, status: "open", cpt: ["97803", "99401"] },
+  { num: "G3", title: "Movement & Fun Fair", topic: "Group activity: family movement games", phase: 1, duration: 60, providers: ["Coach James"], type: "group", date: null, time: null, status: "open", cpt: ["99412"] },
+  { num: 11, title: "Screen Time & Sedentary Behaviors", topic: "Reduce sedentary time, active alternatives", phase: 1, duration: 60, providers: ["Coach James"], type: "provider", date: null, time: null, status: "open", cpt: ["99401–99402"] },
+  { num: 12, title: "Midpoint Check-in", topic: "Review and recalibrate — medical, nutrition, behavioral", phase: 1, duration: 75, providers: ["Dr. Nordgren (MD)", "Maya Chen (RD)", "Coach James"], type: "provider", date: null, time: null, status: "open", cpt: ["99213–99214", "97803", "99401"] },
+  // Phase 2: Maintenance (Months 4–6, biweekly)
+  { num: 13, title: "Overcoming Barriers", topic: "Problem-solving setbacks & coping strategies", phase: 2, duration: 60, providers: ["Coach James"], type: "provider", date: null, time: null, status: "open", cpt: ["99401–99402"] },
+  { num: 14, title: "Advanced Nutrition Skills", topic: "Label reading, snack toolkit, hands-on prep", phase: 2, duration: 60, providers: ["Maya Chen (RD)"], type: "provider", date: null, time: null, status: "open", cpt: ["97803"] },
+  { num: "G4", title: "Parent Support Circle", topic: "Group: parent empowerment & shared strategies", phase: 2, duration: 60, providers: ["Coach James"], type: "group", date: null, time: null, status: "open", cpt: ["99412"] },
+  { num: 15, title: "Relapse Prevention I", topic: "Anticipating risk situations — holidays, events", phase: 2, duration: 60, providers: ["Coach James"], type: "provider", date: null, time: null, status: "open", cpt: ["99401–99402"] },
+  { num: 16, title: "Active Lifestyle Integration", topic: "Movement throughout the day, gamification", phase: 2, duration: 60, providers: ["Coach James"], type: "provider", date: null, time: null, status: "open", cpt: ["99401–99402"] },
+  { num: 17, title: "Parent Empowerment II", topic: "Parents as independent family health leaders", phase: 2, duration: 60, providers: ["Coach James"], type: "provider", date: null, time: null, status: "open", cpt: ["99401–99402"] },
+  { num: 18, title: "Sleep & Stress Refresh", topic: "Strengthening sleep & stress management routines", phase: 2, duration: 60, providers: ["Coach James"], type: "provider", date: null, time: null, status: "open", cpt: ["99401–99402"] },
+  { num: "G5", title: "Resilience Workshop", topic: "Group: peer pressure, social eating, coping scripts", phase: 2, duration: 60, providers: ["Coach James"], type: "group", date: null, time: null, status: "open", cpt: ["99412"] },
+  { num: 19, title: "Relapse Prevention II", topic: "Solidifying resilience — scripts & role-play", phase: 2, duration: 60, providers: ["Coach James"], type: "provider", date: null, time: null, status: "open", cpt: ["99401–99402"] },
+  { num: 20, title: "Final Outcomes & Transition", topic: "Review, celebrate, transition to PCP care", phase: 2, duration: 75, providers: ["Dr. Nordgren (MD)", "Maya Chen (RD)", "Coach James"], type: "provider", date: null, time: null, status: "open", cpt: ["99213–99214", "97803", "99401"] },
+];
+
 // ─── Parent Sessions Tab View ─────────────────────────────────────
-function ParentSessionsTab() {
-  const sessions = [
-    { num: 5, title: "Parents as Agents of Change", date: "Today, 2:00 PM", provider: "Coach James", status: "upcoming" },
-    { num: 4, title: "Physical Activity I", date: "Feb 25", provider: "RD Maya + Coach James", status: "done" },
-    { num: 3, title: "Building Healthy Routines", date: "Feb 18", provider: "Coach James", status: "done" },
-    { num: 2, title: "Nutrition Foundations", date: "Feb 11", provider: "RD Maya", status: "done" },
-    { num: 1, title: "Welcome & Intake", date: "Feb 4", provider: "Dr. Nordgren + RD Maya", status: "done" },
-  ];
+function ParentSessionsTab({ onSchedule }) {
+  const [viewMode, setViewMode] = useState("upcoming"); // "upcoming" | "all" | "schedule"
+  const [expandedSession, setExpandedSession] = useState(null);
+  const [scheduleTarget, setScheduleTarget] = useState(null);
+
+  const statusOrder = { upcoming: 0, scheduled: 1, open: 2, done: 3 };
+
+  const upcoming = SESSION_DATA.filter(s => s.status === "upcoming" || s.status === "scheduled")
+    .sort((a, b) => statusOrder[a.status] - statusOrder[b.status]);
+  const completed = SESSION_DATA.filter(s => s.status === "done");
+  const needsScheduling = SESSION_DATA.filter(s => s.status === "open");
+
+  const completedHours = completed.reduce((sum, s) => sum + s.duration, 0) / 60;
+  const totalHours = SESSION_DATA.reduce((sum, s) => sum + s.duration, 0) / 60;
+
+  const statusConfig = {
+    done: { bg: COLORS.greenLight, color: COLORS.saplingGreen, label: "Completed", icon: "✓" },
+    upcoming: { bg: COLORS.coralLight, color: COLORS.bloomCoral, label: "Today", icon: "→" },
+    scheduled: { bg: COLORS.tealLight, color: COLORS.pathTeal, label: "Scheduled", icon: "📅" },
+    open: { bg: COLORS.warmHover, color: COLORS.slateMuted, label: "Not scheduled", icon: "○" },
+  };
+
+  function handleScheduleClick(session) {
+    setScheduleTarget(session);
+  }
+
+  function handleConfirmSchedule(date, time) {
+    setScheduleTarget(null);
+    // In a real app this would call an API — for the prototype we show a confirmation
+    if (onSchedule) onSchedule(scheduleTarget, date, time);
+  }
+
   return (
     <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
-      <div style={{ fontWeight: 700, fontSize: 15, color: COLORS.slateAnchor, marginBottom: 12 }}>Session Timeline</div>
-      {sessions.map((s, i) => (
-        <div key={i} style={{
-          display: "flex", gap: 12, marginBottom: 4,
-        }}>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 24 }}>
-            <div style={{
-              width: 24, height: 24, borderRadius: 12, flexShrink: 0,
-              background: s.status === "upcoming" ? COLORS.bloomCoral : COLORS.saplingGreen,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 11, color: COLORS.white, fontWeight: 700,
-            }}>{s.status === "upcoming" ? "→" : "✓"}</div>
-            {i < sessions.length - 1 && (
-              <div style={{ width: 2, flex: 1, background: COLORS.warmBorder, marginTop: 4, marginBottom: 4 }} />
-            )}
-          </div>
-          <div style={{
-            flex: 1, background: COLORS.white, borderRadius: 14, padding: 14, marginBottom: 8,
-            boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
-            borderLeft: s.status === "upcoming" ? `3px solid ${COLORS.bloomCoral}` : "none",
-          }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: s.status === "upcoming" ? COLORS.bloomCoral : COLORS.slateMuted }}>
-              Session {s.num} · {s.date}
+      {/* Summary banner */}
+      <div style={{
+        background: `linear-gradient(135deg, ${COLORS.tealLight}, ${COLORS.greenLight})`,
+        borderRadius: 20, padding: 20, marginBottom: 16,
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.pathTeal, textTransform: "uppercase", letterSpacing: 0.5 }}>
+              Care Timeline
             </div>
-            <div style={{ fontWeight: 600, fontSize: 14, color: COLORS.slateAnchor, marginTop: 2 }}>{s.title}</div>
-            <div style={{ fontSize: 12, color: COLORS.slateMuted, marginTop: 2 }}>{s.provider}</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: COLORS.pathTeal, marginTop: 4 }}>
+              {completed.length}/{SESSION_DATA.length} sessions
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <div style={{ fontSize: 20, fontWeight: 800, color: COLORS.saplingGreen }}>{completedHours.toFixed(1)}h</div>
+            <div style={{ fontSize: 11, color: COLORS.slateMuted }}>of {totalHours.toFixed(1)}h total</div>
           </div>
         </div>
-      ))}
+        <div style={{ marginTop: 12, height: 8, borderRadius: 4, background: "rgba(255,255,255,0.7)" }}>
+          <div style={{
+            height: 8, borderRadius: 4,
+            width: `${Math.round((completed.length / SESSION_DATA.length) * 100)}%`,
+            background: `linear-gradient(90deg, ${COLORS.saplingGreen}, ${COLORS.pathTeal})`,
+            transition: "width 0.6s ease",
+          }} />
+        </div>
+      </div>
+
+      {/* View toggle */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+        {[
+          { id: "upcoming", label: "Upcoming", count: upcoming.length },
+          { id: "schedule", label: "Schedule", count: needsScheduling.length },
+          { id: "all", label: "All Sessions" },
+        ].map(v => (
+          <button key={v.id} onClick={() => setViewMode(v.id)} style={{
+            flex: 1, padding: "10px 6px", borderRadius: 14, border: "none", cursor: "pointer",
+            background: viewMode === v.id ? COLORS.pathTeal : COLORS.white,
+            color: viewMode === v.id ? COLORS.white : COLORS.slateAnchor,
+            fontWeight: 600, fontSize: 12, transition: "all 0.2s",
+            boxShadow: viewMode === v.id ? "0 2px 8px rgba(0,95,115,0.25)" : "0 1px 3px rgba(0,0,0,0.06)",
+          }}>
+            {v.label}
+            {v.count > 0 && (
+              <span style={{
+                display: "inline-block", marginLeft: 4, width: 18, height: 18, borderRadius: 9,
+                background: viewMode === v.id ? "rgba(255,255,255,0.3)" : COLORS.bloomCoral,
+                color: COLORS.white, fontSize: 10, lineHeight: "18px", textAlign: "center",
+              }}>{v.count}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Schedule picker overlay */}
+      {scheduleTarget && (
+        <div style={{
+          background: COLORS.white, borderRadius: 16, padding: 16, marginBottom: 12,
+          border: `2px solid ${COLORS.bloomCoral}`, boxShadow: "0 4px 16px rgba(0,0,0,0.1)",
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, color: COLORS.slateAnchor }}>
+              Schedule: {scheduleTarget.title}
+            </div>
+            <button onClick={() => setScheduleTarget(null)} style={{
+              background: "none", border: "none", fontSize: 18, color: COLORS.slateMuted, cursor: "pointer",
+            }}>✕</button>
+          </div>
+          <div style={{ fontSize: 12, color: COLORS.slateMuted, marginBottom: 12 }}>
+            {scheduleTarget.duration} min · {scheduleTarget.type === "group" ? "Group session" : "1-on-1"} · {scheduleTarget.providers.join(", ")}
+          </div>
+          <div style={{ fontWeight: 600, fontSize: 12, color: COLORS.pathTeal, marginBottom: 8 }}>Available times</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {[
+              { date: "Tue, Mar 11", time: "10:00 AM" },
+              { date: "Tue, Mar 11", time: "2:00 PM" },
+              { date: "Thu, Mar 13", time: "4:00 PM" },
+              { date: "Fri, Mar 14", time: "11:00 AM" },
+            ].map((slot, i) => (
+              <button key={i} onClick={() => handleConfirmSchedule(slot.date, slot.time)} style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "10px 14px", borderRadius: 12,
+                border: `1px solid ${COLORS.warmBorder}`, background: COLORS.clinicalCream,
+                cursor: "pointer", transition: "all 0.15s", textAlign: "left",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.bloomCoral; e.currentTarget.style.background = COLORS.coralLight; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.warmBorder; e.currentTarget.style.background = COLORS.clinicalCream; }}
+              >
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: COLORS.slateAnchor }}>{slot.date}</div>
+                  <div style={{ fontSize: 12, color: COLORS.slateMuted }}>{slot.time} · {scheduleTarget.duration} min</div>
+                </div>
+                <div style={{
+                  padding: "4px 10px", borderRadius: 8,
+                  background: COLORS.bloomCoral, color: COLORS.white,
+                  fontSize: 11, fontWeight: 600,
+                }}>Book</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Upcoming view */}
+      {viewMode === "upcoming" && (
+        <>
+          {upcoming.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 20, color: COLORS.slateMuted }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>📅</div>
+              <div style={{ fontSize: 14 }}>No upcoming sessions. Head to Schedule to book your next one!</div>
+            </div>
+          ) : (
+            upcoming.map((s, i) => {
+              const cfg = statusConfig[s.status];
+              const isExpanded = expandedSession === `${s.num}`;
+              return (
+                <button key={i} onClick={() => setExpandedSession(isExpanded ? null : `${s.num}`)} style={{
+                  width: "100%", textAlign: "left", cursor: "pointer",
+                  background: COLORS.white, borderRadius: 16, padding: 0, marginBottom: 10,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)", border: s.status === "upcoming" ? `2px solid ${COLORS.bloomCoral}` : `1px solid ${COLORS.warmBorder}`,
+                  overflow: "hidden", transition: "all 0.2s",
+                }}>
+                  <div style={{ padding: 14 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{
+                        width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                        background: s.type === "group" ? COLORS.yellowLight : cfg.bg,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 13, fontWeight: 700, color: s.type === "group" ? COLORS.slateAnchor : cfg.color,
+                      }}>
+                        {s.type === "group" ? "👥" : (typeof s.num === "number" ? s.num : s.num)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontWeight: 600, fontSize: 14, color: COLORS.slateAnchor }}>{s.title}</span>
+                          {s.type === "group" && (
+                            <span style={{
+                              fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 6,
+                              background: COLORS.sunWashedYellow, color: COLORS.slateAnchor,
+                            }}>GROUP</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 12, color: COLORS.bloomCoral, fontWeight: 500, marginTop: 2 }}>
+                          {s.date}{s.time ? ` at ${s.time}` : ""} · {s.duration} min
+                        </div>
+                        <div style={{ fontSize: 12, color: COLORS.slateMuted, marginTop: 1 }}>{s.providers.join(", ")}</div>
+                      </div>
+                      <div style={{
+                        padding: "3px 8px", borderRadius: 8, fontSize: 10, fontWeight: 600,
+                        background: cfg.bg, color: cfg.color,
+                      }}>{cfg.label}</div>
+                    </div>
+                  </div>
+                  {isExpanded && (
+                    <div style={{
+                      padding: "0 14px 14px", borderTop: `1px solid ${COLORS.warmBorder}`,
+                      paddingTop: 12,
+                    }}>
+                      <div style={{ fontSize: 12, color: COLORS.slateMuted, marginBottom: 8 }}>
+                        <strong style={{ color: COLORS.slateAnchor }}>Topic:</strong> {s.topic}
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <div style={{
+                          flex: 1, padding: "8px 12px", borderRadius: 10, textAlign: "center",
+                          background: COLORS.bloomCoral, color: COLORS.white,
+                          fontSize: 12, fontWeight: 600, cursor: "pointer",
+                        }}>Join Session</div>
+                        <div style={{
+                          flex: 1, padding: "8px 12px", borderRadius: 10, textAlign: "center",
+                          background: COLORS.tealLight, color: COLORS.pathTeal,
+                          fontSize: 12, fontWeight: 600, cursor: "pointer",
+                        }}>Reschedule</div>
+                      </div>
+                    </div>
+                  )}
+                </button>
+              );
+            })
+          )}
+
+          {/* Completed section */}
+          {completed.length > 0 && (
+            <>
+              <div style={{ fontWeight: 600, fontSize: 13, color: COLORS.slateMuted, marginTop: 16, marginBottom: 10 }}>
+                Completed ({completed.length})
+              </div>
+              {completed.sort((a, b) => (typeof b.num === "number" ? b.num : 0) - (typeof a.num === "number" ? a.num : 0)).map((s, i) => (
+                <div key={i} style={{
+                  display: "flex", alignItems: "center", gap: 10,
+                  background: COLORS.white, borderRadius: 12, padding: "10px 14px", marginBottom: 6,
+                  opacity: 0.7,
+                }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 8,
+                    background: s.type === "group" ? COLORS.yellowLight : COLORS.greenLight,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 700, color: COLORS.saplingGreen,
+                  }}>✓</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 500, fontSize: 13, color: COLORS.slateAnchor }}>
+                      {s.type === "group" ? "👥 " : ""}{s.title}
+                    </div>
+                    <div style={{ fontSize: 11, color: COLORS.slateMuted }}>{s.date} · {s.providers[0]}</div>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </>
+      )}
+
+      {/* Schedule view — sessions needing booking */}
+      {viewMode === "schedule" && (
+        <>
+          <div style={{ fontSize: 13, color: COLORS.slateMuted, marginBottom: 12 }}>
+            These sessions need to be scheduled. Tap to pick a time.
+          </div>
+          {needsScheduling.map((s, i) => (
+            <button key={i} onClick={() => handleScheduleClick(s)} style={{
+              width: "100%", textAlign: "left", cursor: "pointer",
+              background: COLORS.white, borderRadius: 16, padding: 14, marginBottom: 10,
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+              border: `1px dashed ${COLORS.warmBorder}`, transition: "all 0.15s",
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.bloomCoral; e.currentTarget.style.borderStyle = "solid"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.warmBorder; e.currentTarget.style.borderStyle = "dashed"; }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                  background: s.type === "group" ? COLORS.yellowLight : COLORS.warmHover,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 13, fontWeight: 700, color: COLORS.slateMuted,
+                }}>
+                  {s.type === "group" ? "👥" : (typeof s.num === "number" ? s.num : s.num)}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontWeight: 600, fontSize: 14, color: COLORS.slateAnchor }}>{s.title}</span>
+                    {s.type === "group" && (
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, padding: "1px 6px", borderRadius: 6,
+                        background: COLORS.sunWashedYellow, color: COLORS.slateAnchor,
+                      }}>GROUP</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: 12, color: COLORS.slateMuted, marginTop: 2 }}>{s.topic}</div>
+                  <div style={{ fontSize: 11, color: COLORS.slateFaint, marginTop: 2 }}>{s.duration} min · {s.providers.join(", ")}</div>
+                </div>
+                <div style={{
+                  padding: "6px 10px", borderRadius: 10,
+                  background: COLORS.bloomCoral, color: COLORS.white,
+                  fontSize: 11, fontWeight: 600, flexShrink: 0,
+                }}>Book</div>
+              </div>
+            </button>
+          ))}
+        </>
+      )}
+
+      {/* All sessions view */}
+      {viewMode === "all" && (
+        <>
+          {[1, 2].map(phase => {
+            const phaseSessions = SESSION_DATA.filter(s => s.phase === phase);
+            return (
+              <div key={phase}>
+                <div style={{
+                  fontWeight: 700, fontSize: 13, color: COLORS.pathTeal,
+                  marginBottom: 8, marginTop: phase > 1 ? 16 : 0,
+                  padding: "6px 10px", borderRadius: 8, background: COLORS.tealLight, display: "inline-block",
+                }}>
+                  Phase {phase}: {phase === 1 ? "Intensive (Weeks 1–12)" : "Maintenance (Months 4–6)"}
+                </div>
+                {phaseSessions.map((s, i) => {
+                  const cfg = statusConfig[s.status];
+                  const isExpanded = expandedSession === `all_${s.num}`;
+                  return (
+                    <button key={i} onClick={() => setExpandedSession(isExpanded ? null : `all_${s.num}`)} style={{
+                      width: "100%", textAlign: "left", cursor: "pointer",
+                      display: "flex", gap: 10, marginBottom: 4, padding: 0,
+                      background: "transparent", border: "none",
+                    }}>
+                      {/* Timeline dot + line */}
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 24, paddingTop: 4 }}>
+                        <div style={{
+                          width: 22, height: 22, borderRadius: 11, flexShrink: 0,
+                          background: cfg.bg, border: `2px solid ${cfg.color}`,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 10, color: cfg.color, fontWeight: 700,
+                        }}>{cfg.icon}</div>
+                        {i < phaseSessions.length - 1 && (
+                          <div style={{ width: 2, flex: 1, background: COLORS.warmBorder, marginTop: 2, marginBottom: 2, minHeight: 12 }} />
+                        )}
+                      </div>
+                      {/* Card */}
+                      <div style={{
+                        flex: 1, background: COLORS.white, borderRadius: 12, padding: "10px 12px", marginBottom: 6,
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                        borderLeft: s.status === "upcoming" ? `3px solid ${COLORS.bloomCoral}` : "none",
+                        opacity: s.status === "done" ? 0.7 : 1,
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: cfg.color }}>
+                            {s.type === "group" ? `Group ${s.num}` : `Session ${s.num}`}
+                            {s.date ? ` · ${s.date}` : ""}
+                          </div>
+                          <span style={{
+                            fontSize: 9, fontWeight: 600, padding: "1px 6px", borderRadius: 6,
+                            background: s.type === "group" ? COLORS.sunWashedYellow : COLORS.tealLight,
+                            color: s.type === "group" ? COLORS.slateAnchor : COLORS.pathTeal,
+                          }}>{s.type === "group" ? "GROUP" : "1-ON-1"}</span>
+                        </div>
+                        <div style={{ fontWeight: 600, fontSize: 13, color: COLORS.slateAnchor, marginTop: 2 }}>{s.title}</div>
+                        <div style={{ fontSize: 11, color: COLORS.slateMuted, marginTop: 1 }}>{s.providers[0]}{s.providers.length > 1 ? ` +${s.providers.length - 1}` : ""} · {s.duration} min</div>
+                        {isExpanded && (
+                          <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${COLORS.warmBorder}` }}>
+                            <div style={{ fontSize: 12, color: COLORS.slateMuted, marginBottom: 4 }}>
+                              <strong style={{ color: COLORS.slateAnchor }}>Topic:</strong> {s.topic}
+                            </div>
+                            <div style={{ fontSize: 11, color: COLORS.slateFaint }}>
+                              Providers: {s.providers.join(", ")}
+                            </div>
+                            {s.status === "open" && (
+                              <div onClick={(e) => { e.stopPropagation(); handleScheduleClick(s); }} style={{
+                                marginTop: 8, padding: "6px 12px", borderRadius: 8, textAlign: "center",
+                                background: COLORS.bloomCoral, color: COLORS.white,
+                                fontSize: 12, fontWeight: 600, cursor: "pointer",
+                              }}>Schedule this session</div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }
@@ -1686,6 +2174,11 @@ export default function BloomPathChat() {
     setMessages(prev => prev.filter(m =>
       m.type !== "quickReplies" && m.type !== "moodPicker" && m.type !== "counter" && m.type !== "metricsInput"
     ));
+    // Handle tab navigation actions
+    if (reply.action === "goto_sessions") {
+      setActiveTab("sessions");
+      return;
+    }
     startFlow(reply.action);
   }
 
@@ -1698,6 +2191,37 @@ export default function BloomPathChat() {
     setMessages(prev => prev.filter(m => m.type !== "counter"));
     setMessages(prev => [...prev, { id: "water_user", from: "user", text: `💧 ${count} cups logged!` }]);
     setTimeout(() => startFlow("child_water_logged"), 300);
+  }
+
+  function handleSessionSchedule(session, date, time) {
+    // Switch to chat and show a confirmation flow
+    setActiveTab("chat");
+    setMessages(prev => prev.filter(m =>
+      m.type !== "quickReplies" && m.type !== "moodPicker" && m.type !== "counter" && m.type !== "metricsInput"
+    ));
+    setMessages(prev => [...prev, {
+      id: `sched_user_${Date.now()}`,
+      from: "user",
+      text: `📅 Book "${session.title}" — ${date} at ${time}`,
+    }]);
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        id: `sched_confirm_${Date.now()}`,
+        from: "bloom",
+        text: `Done! "${session.title}" is confirmed for ${date} at ${time} (${session.duration} min) with ${session.providers.join(" and ")}. You'll get a reminder the day before.`,
+      }]);
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          id: `sched_qr_${Date.now()}`,
+          from: "bloom",
+          type: "quickReplies",
+          replies: [
+            { label: "View sessions", action: "goto_sessions" },
+            { label: "Back to home", action: "parent_home" },
+          ],
+        }]);
+      }, 600);
+    }, 600);
   }
 
   function handleMetricsSubmit(metrics) {
@@ -1880,7 +2404,7 @@ export default function BloomPathChat() {
       ) : activeTab === "progress" ? (
         <ParentProgressTab />
       ) : activeTab === "sessions" ? (
-        <ParentSessionsTab />
+        <ParentSessionsTab onSchedule={handleSessionSchedule} />
       ) : null}
 
       {/* ── Input ── */}
